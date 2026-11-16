@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import Login from './pages/Login'
 import Profile from './pages/Profile'
 
@@ -7,25 +7,14 @@ function App() {
   const [user, setUser] = useState(null)
   const [token, setToken] = useState(null)
 
-  useEffect(() => {
-    const savedToken = localStorage.getItem('token')
-    const savedUser = localStorage.getItem('user')
-
-    if (savedToken && savedUser) {
-      setToken(savedToken)
-      setUser(JSON.parse(savedUser))
-    }
-  }, [])
-
   function handleLogin(userData, userToken) {
     setUser(userData)
     setToken(userToken)
-    localStorage.setItem('user', JSON.stringify(userData))
+    localStorage.setItem('token', userToken)
   }
 
   function handleLogout() {
     localStorage.removeItem('token')
-    localStorage.removeItem('user')
     setUser(null)
     setToken(null)
   }
