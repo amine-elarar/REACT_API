@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import Login from './pages/Login'
+import AdminLayout from './pages/admin/AdminLayout'
+import LearnerLayout from './pages/learner/LearnerLayout'
 
 function App() {
   const [user, setUser] = useState(null)
@@ -19,12 +21,18 @@ function App() {
     return <Login onLoginSuccess={handleLoginSuccess} />
   }
 
+  if (user.role === 'admin') {
+    return <AdminLayout user={user} token={token} onLogout={handleLogout} />
+  }
+
+  if (user.role === 'learner') {
+    return <LearnerLayout user={user} token={token} onLogout={handleLogout} />
+  }
+
   return (
     <div>
-      <h1>Welcome, {user.name}</h1>
-      <p>Email: {user.email}</p>
-      <p>Role: {user.role}</p>
-      <button onClick={handleLogout}>Logout</button>
+      <p>Rôle non reconnu: {user.role}</p>
+      <button onClick={handleLogout}>Déconnexion</button>
     </div>
   )
 }
