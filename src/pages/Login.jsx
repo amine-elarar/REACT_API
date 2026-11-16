@@ -1,90 +1,98 @@
-
 import { useState } from 'react'
 
-function Login({ routeLogin }) {
-    const [email, setEmail] = useState('')
-    const [password, setPassword] = useState('')
-    const [error, setError] = useState('')
+function Login({ onLoginSuccess }) {
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
 
-    async function handleLogin(e) {
-        e.preventDefault()
-        setError('')
+  async function handleSubmit(e) {
+    e.preventDefault()
+    setError('')
 
-        if (!email.trim() || !password.trim()) {
-            setError('Email and Password are required')
-            return
-        }
-
-        if (!email.includes('@') || !email.includes('.')) {
-            setError('Please enter a valid email')
-            return
-        }
-
-        if (password.length < 6) {
-            setError('Password must contain at least 6 characters')
-            return
-        }
-
-        try {
-            const response = await fetch(`${import.meta.env.VITE_API_URL}/auth/login`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ email, password })
-            })
-
-            const data = await response.json()
-
-            if (!response.ok) {
-                setError(data.message || 'Login failed')
-                return
-            }
-
-            
-            localStorage.setItem('token', data.token)
-
-           routeLogin(data.data.user, data.token);
-
-        } catch (error) 
-        {
-            setError('Cannot connect to server')
-        }
+    if (!email.trim() || !password.trim()) {
+      setError('Email and password are required.')
+      return
     }
 
-    return (
+    setLoading(true)
+
+    try {
+      const loginResponse = await fetch(`${import.meta.env.VITE_API_URL}/auth/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ email, password })
+      })
+
+      const loginData = await loginResponse.json()
+
+      if (!loginResponse.ok) {
+        setError(loginData.message || 'Login failed.')
+        return
+      }
+
+      const token = loginData.token
+
+      const profileResponse = await fetch(`${import.meta.env.VITE_API_URL}/profiles/me`, {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      })
+
+      const profileData = await profileResponse.json()
+
+      if (!profileResponse.ok) {
+        setError('Failed to fetch user profile.')
+        return
+      }
+
+      const user = profileData.data.user
+      onLoginSuccess(user, token)
+
+    } catch (err) {
+      setError('Cannot connect to server.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div>
+      <h2>Login</h2>
+      <form onSubmit={handleSubmit}>
         <div>
-            <h1>Login</h1>
-
-            <form onSubmit={handleLogin}>
-                <div>
-                    <label htmlFor="email">Email</label>
-                    <input
-                        type="email"
-                        id="email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        placeholder="Enter your email"
-                    />
-                </div>
-
-                <div>
-                    <label htmlFor="password">Password</label>
-                    <input
-                        type="password"
-                        id="password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        placeholder="Enter your password"
-                    />
-                </div>
-
-                {error && <p style={{ color: 'red' }}>{error}</p>}
-
-                <button type="submit">Login</button>
-            </form>
+          <label htmlFor="email">Email</label>
+          <input
+            id="email"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="Enter your email"
+          />
         </div>
-    )
+
+        <div>
+          <label htmlFor="password">Password</label>
+          <input
+            id="password"
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="Enter your password"
+          />
+        </div>
+
+        {error && <p style={{ color: 'red' }}>{error}</p>}
+
+        <button type="submit" disabled={loading}>
+          {loading ? 'Logging in...' : 'Login'}
+        </button>
+      </form>
+    </div>
+  )
 }
 
 export default Login
