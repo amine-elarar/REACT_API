@@ -1,7 +1,7 @@
 
 import { useState } from 'react'
 
-function Login() {
+function Login({ routeLogin }) {
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
     const [error, setError] = useState('')
@@ -26,7 +26,7 @@ function Login() {
         }
 
         try {
-            const response = await fetch('http://13.48.171.128/api/auth/login', {
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/auth/login`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -41,8 +41,10 @@ function Login() {
                 return
             }
 
-            console.log('Login successful:', data)
-            console.log('Token:', data.token)
+            
+            localStorage.setItem('token', data.token)
+
+           routeLogin(data.data.user, data.token);
 
         } catch (error) 
         {
