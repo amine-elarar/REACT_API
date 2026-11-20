@@ -1,46 +1,73 @@
-
 import { useState } from 'react'
 
-function Login() {
+function Login({ onLoginSuccess }) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
 
-  function handleLogin(e) {
+  async function handleSubmit(e) {
     e.preventDefault()
     setError('')
 
-    if (!email.trim() || !password.trim()) 
-    {
-      setError('Email and Password are required')
+    if (!email.trim() || !password.trim()) {
+      setError('Email and password are required.')
       return
     }
 
-    if (!email.includes('@') || !email.includes('.')) 
-    {
-      setError('Please enter a valid email')
-      return
-    }
+    setLoading(true)
 
-    if (password.length < 6) {
-      setError('Password must contain at least 6 characters')
-      return
-    }
+    try {
+      const loginResponse = await fetch(`${import.meta.env.VITE_API_URL}/auth/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ email, password })
+      })
 
-    console.log('Email:', email)
-    console.log('Password:', password)
+      const loginData = await loginResponse.json()
+
+      if (!loginResponse.ok) {
+        setError(loginData.message || 'Login failed.')
+        return
+      }
+
+      const token = loginData.token
+
+      const profileResponse = await fetch(`${import.meta.env.VITE_API_URL}/profiles/me`, {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      })
+
+      const profileData = await profileResponse.json()
+
+      if (!profileResponse.ok) {
+        setError('Failed to fetch user profile.')
+        return
+      }
+
+      const user = profileData.data.user
+      onLoginSuccess(user, token)
+
+    } catch (err) {
+      setError('Cannot connect to server.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
     <div>
-      <h1>Login</h1>
-
-      <form onSubmit={handleLogin}>
+      <h2>Login</h2>
+      <form onSubmit={handleSubmit}>
         <div>
           <label htmlFor="email">Email</label>
           <input
-            type="email"
             id="email"
+            type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="Enter your email"
@@ -50,8 +77,8 @@ function Login() {
         <div>
           <label htmlFor="password">Password</label>
           <input
-            type="password"
             id="password"
+            type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="Enter your password"
@@ -60,7 +87,9 @@ function Login() {
 
         {error && <p style={{ color: 'red' }}>{error}</p>}
 
-        <button type="submit">Login</button>
+        <button type="submit" disabled={loading}>
+          {loading ? 'Logging in...' : 'Login'}
+        </button>
       </form>
     </div>
   )
