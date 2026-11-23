@@ -1,16 +1,45 @@
-# React + Vite
+# LMS Platform - Front-end React Fondamentaux (Sprint 3)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Application Front-end construite avec React 19 et Vite pour la plateforme LMS.
 
-Currently, two official plugins are available:
+## Objectifs & Contraintes respectées
+- **Hooks stricts** : Utilisation exclusive du hook `useState` (aucun appel d'effet de bord via `useEffect`).
+- **Session en mémoire** : La session (token JWT, informations utilisateur, rôle certifié) est stockée uniquement dans l'état racine `App` (aucune persistance arbitraire dans `localStorage`).
+- **Routage conditionnel sans bibliothèque externe** : Bascule dynamique entre `AdminLayout` et `LearnerLayout` selon le rôle retourné par l'API backend via un composant de garde `ProtectedView`.
+- **Formulaires contrôlés** : Formulaires de connexion, de cours et d'utilisateurs entièrement contrôlés avec validation synchrone et préservation des saisies en cas d'erreur serveur.
+- **Gestion explicite des erreurs HTTP** :
+  - `401 Unauthorized` : Déconnexion et purge automatique de l'état pour retour à l'écran de login.
+  - `403 Forbidden` : Maintien de la session avec affichage immédiat d'un panneau "Accès refusé".
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Installation et Démarrage
 
-## React Compiler
+1. Cloner le projet :
+\`\`\`bash
+git clone https://github.com/amine-elarar/REACT_API.git
+cd REACT_API
+\`\`\`
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+2. Installer les dépendances :
+\`\`\`bash
+npm install
+\`\`\`
 
-## Expanding the ESLint configuration
+3. Configurer l'environnement :
+Copier le fichier `.env.example` en `.env` et renseigner l'URL de l'API backend :
+\`\`\`bash
+cp .env.example .env
+\`\`\`
+Exemple de configuration dans `.env` :
+\`\`\`env
+VITE_API_URL=http://13.48.171.128/api
+\`\`\`
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+4. Lancer le serveur de développement :
+\`\`\`bash
+npm run dev
+\`\`\`
+
+5. Construire le livrable de production :
+\`\`\`bash
+npm run build
+\`\`\`

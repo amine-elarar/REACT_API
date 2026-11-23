@@ -30,8 +30,8 @@ function App() {
   }
 
   return (
-    <div>
-      <p>Rôle non reconnu: {user.role}</p>
+    <div className="card" style={{ maxWidth: '400px', margin: '40px auto', textAlign: 'center' }}>
+      <p style={{ color: '#F87171', marginBottom: '16px' }}>Rôle non reconnu: {user.role}</p>
       <button onClick={handleLogout}>Déconnexion</button>
     </div>
   )

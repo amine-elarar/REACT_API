@@ -26,6 +26,11 @@ function LearnerLayout({ user, token, onLogout }) {
         return
       }
 
+      if (response.status === 403) {
+        setError('Accès refusé.')
+        return
+      }
+
       if (!response.ok) {
         setError(data.message || 'Erreur lors du chargement des cours.')
         return
@@ -42,36 +47,49 @@ function LearnerLayout({ user, token, onLogout }) {
 
   return (
     <ProtectedView userRole={user.role} allowedRoles={['learner']}>
-      <div>
-        <header>
-          <h1>Espace Apprenant</h1>
-          <p>Bienvenue, {user.name} 👋</p>
+      <div style={{ maxWidth: '900px', margin: '0 auto' }}>
+        <header className="card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div>
+            <h1 style={{ fontSize: '24px', color: '#38BDF8' }}>Espace Apprenant</h1>
+            <p style={{ color: 'rgba(255, 255, 255, 0.7)', marginTop: '4px' }}>
+              Bienvenue, <strong>{user.name}</strong> ({user.email})
+            </p>
+          </div>
           <button onClick={onLogout}>Déconnexion</button>
         </header>
 
-        <main>
-          <h2>Mes Cours</h2>
+        <main className="card">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+            <h2>Mes Cours Inscrits</h2>
+            <button onClick={handleLoadCourses} disabled={loading}>
+              {loading ? 'Chargement...' : 'Charger mes cours'}
+            </button>
+          </div>
 
-          <button onClick={handleLoadCourses} disabled={loading}>
-            {loading ? 'Chargement...' : 'Charger mes cours'}
-          </button>
-
-          {error && <p style={{ color: 'red' }}>{error}</p>}
+          {error && <p style={{ color: '#F87171', marginBottom: '16px' }}>{error}</p>}
 
           {hasLoaded && enrollments.length === 0 && !loading && !error && (
-            <p>Vous n'êtes inscrit à aucun cours pour le moment.</p>
+            <p style={{ color: 'rgba(255, 255, 255, 0.6)', fontStyle: 'italic', padding: '16px 0' }}>
+              Vous n'êtes inscrit à aucun cours pour le moment.
+            </p>
           )}
 
           {enrollments.length > 0 && (
-            <ul>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {enrollments.map((item) => (
-                <li key={item._id}>
-                  <strong>{item.course?.title || 'Cours sans titre'}</strong>
-                  {item.course?.category && <span> - Catégorie: {item.course.category}</span>}
-                  {item.status && <span> - Statut: {item.status}</span>}
-                </li>
+                <div key={item._id} className="item-card">
+                  <div>
+                    <strong>{item.course?.title || 'Cours sans titre'}</strong>
+                    {item.course?.category && (
+                      <span style={{ display: 'block', fontSize: '13px', color: 'rgba(255, 255, 255, 0.6)' }}>
+                        Catégorie: {item.course.category}
+                      </span>
+                    )}
+                  </div>
+                  <span className="badge">{item.status || 'inscrit'}</span>
+                </div>
               ))}
-            </ul>
+            </div>
           )}
         </main>
       </div>

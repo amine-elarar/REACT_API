@@ -11,7 +11,7 @@ function Login({ onLoginSuccess }) {
     setError('')
 
     if (!email.trim() || !password.trim()) {
-      setError('Email and password are required.')
+      setError('Email et mot de passe obligatoires.')
       return
     }
 
@@ -29,7 +29,7 @@ function Login({ onLoginSuccess }) {
       const loginData = await loginResponse.json()
 
       if (!loginResponse.ok) {
-        setError(loginData.message || 'Login failed.')
+        setError(loginData.message || 'Identifiants incorrects.')
         return
       }
 
@@ -45,7 +45,7 @@ function Login({ onLoginSuccess }) {
       const profileData = await profileResponse.json()
 
       if (!profileResponse.ok) {
-        setError('Failed to fetch user profile.')
+        setError('Impossible de récupérer le profil.')
         return
       }
 
@@ -53,44 +53,46 @@ function Login({ onLoginSuccess }) {
       onLoginSuccess(user, token)
 
     } catch (err) {
-      setError('Cannot connect to server.')
+      setError('Impossible de se connecter au serveur.')
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <div>
-      <h2>Login</h2>
-      <form onSubmit={handleSubmit}>
-        <div>
-          <label htmlFor="email">Email</label>
-          <input
-            id="email"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="Enter your email"
-          />
-        </div>
+    <div style={{ maxWidth: '420px', margin: '60px auto' }}>
+      <div className="card">
+        <h2 style={{ marginBottom: '20px', textAlign: 'center', color: '#38BDF8' }}>Connexion LMS</h2>
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <div>
+            <label htmlFor="email" style={{ display: 'block', marginBottom: '6px', fontSize: '13px' }}>Email</label>
+            <input
+              id="email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="admin@example.com"
+            />
+          </div>
 
-        <div>
-          <label htmlFor="password">Password</label>
-          <input
-            id="password"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="Enter your password"
-          />
-        </div>
+          <div>
+            <label htmlFor="password" style={{ display: 'block', marginBottom: '6px', fontSize: '13px' }}>Mot de passe</label>
+            <input
+              id="password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="••••••••"
+            />
+          </div>
 
-        {error && <p style={{ color: 'red' }}>{error}</p>}
+          {error && <p style={{ color: '#F87171', fontSize: '13px' }}>{error}</p>}
 
-        <button type="submit" disabled={loading}>
-          {loading ? 'Logging in...' : 'Login'}
-        </button>
-      </form>
+          <button type="submit" disabled={loading} style={{ marginTop: '8px' }}>
+            {loading ? 'Connexion en cours...' : 'Se connecter'}
+          </button>
+        </form>
+      </div>
     </div>
   )
 }
