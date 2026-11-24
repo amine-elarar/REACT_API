@@ -7,6 +7,7 @@ function CourseList({ token, onLogout }) {
   const [hasLoaded, setHasLoaded] = useState(false)
   const [categoryFilter, setCategoryFilter] = useState('all')
   const [statusFilter, setStatusFilter] = useState('all')
+  const [searchKeyword, setSearchKeyword] = useState('')
 
   const [editingCourseId, setEditingCourseId] = useState(null)
   const [title, setTitle] = useState('')
@@ -101,9 +102,9 @@ function CourseList({ token, onLogout }) {
           Authorization: `Bearer ${token}`
         },
         body: JSON.stringify({
-          title,
-          description,
-          category,
+          title: title.trim(),
+          description: description.trim(),
+          category: category.trim(),
           level,
           estimatedDuration: Number(estimatedDuration),
           objectives: ['Objectif général']
@@ -184,25 +185,56 @@ function CourseList({ token, onLogout }) {
   const filteredCourses = courses.filter((course) => {
     const matchesCategory = categoryFilter === 'all' || course.category === categoryFilter
     const matchesStatus = statusFilter === 'all' || course.status === statusFilter
-    return matchesCategory && matchesStatus
+    const matchesSearch = !searchKeyword.trim() ||
+      course.title.toLowerCase().includes(searchKeyword.toLowerCase()) ||
+      course.category.toLowerCase().includes(searchKeyword.toLowerCase())
+    return matchesCategory && matchesStatus && matchesSearch
   })
+
+  function getStatusBadgeClass(status) {
+    if (status === 'published') return 'badge badge-success'
+    if (status === 'draft') return 'badge badge-warning'
+    return 'badge'
+  }
 
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-        <h2>Catalogue des Cours</h2>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
+        <div>
+          <h2 style={{ fontSize: '20px', fontWeight: '700', color: '#F8FAFC' }}>Catalogue des Cours</h2>
+          <p style={{ fontSize: '13px', color: 'rgba(148, 163, 184, 0.85)', marginTop: '2px' }}>
+            Consultez et gérez les cours de la plateforme
+          </p>
+        </div>
         <button onClick={handleLoadCourses} disabled={loading}>
-          {loading ? 'Chargement...' : 'Charger les cours'}
+          {loading ? 'Chargement...' : 'Actualiser le catalogue'}
         </button>
       </div>
 
-      {error && <p style={{ color: '#F87171', marginBottom: '16px' }}>{error}</p>}
+      {error && (
+        <div style={{ background: 'rgba(239, 68, 68, 0.12)', border: '1px solid rgba(239, 68, 68, 0.3)', borderRadius: '10px', padding: '12px 16px', color: '#FCA5A5', marginBottom: '20px', fontSize: '14px' }}>
+          {error}
+        </div>
+      )}
 
       {courses.length > 0 && (
-        <div style={{ display: 'flex', gap: '16px', marginBottom: '20px' }}>
-          <div style={{ flex: 1 }}>
-            <label htmlFor="categoryFilter" style={{ display: 'block', marginBottom: '6px', fontSize: '13px' }}>
-              Filtrer par Catégorie
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '14px', marginBottom: '22px' }}>
+          <div>
+            <label htmlFor="searchKeyword" style={{ display: 'block', marginBottom: '6px', fontSize: '12px', fontWeight: '500', color: '#94A3B8' }}>
+              Recherche par mot-clé
+            </label>
+            <input
+              id="searchKeyword"
+              type="text"
+              value={searchKeyword}
+              onChange={(e) => setSearchKeyword(e.target.value)}
+              placeholder="ex: React, MongoDB..."
+            />
+          </div>
+
+          <div>
+            <label htmlFor="categoryFilter" style={{ display: 'block', marginBottom: '6px', fontSize: '12px', fontWeight: '500', color: '#94A3B8' }}>
+              Catégorie
             </label>
             <select
               id="categoryFilter"
@@ -218,9 +250,9 @@ function CourseList({ token, onLogout }) {
             </select>
           </div>
 
-          <div style={{ flex: 1 }}>
-            <label htmlFor="statusFilter" style={{ display: 'block', marginBottom: '6px', fontSize: '13px' }}>
-              Filtrer par Statut
+          <div>
+            <label htmlFor="statusFilter" style={{ display: 'block', marginBottom: '6px', fontSize: '12px', fontWeight: '500', color: '#94A3B8' }}>
+              Statut
             </label>
             <select
               id="statusFilter"
@@ -237,30 +269,31 @@ function CourseList({ token, onLogout }) {
       )}
 
       {hasLoaded && filteredCourses.length === 0 && !loading && (
-        <p style={{ color: 'rgba(255, 255, 255, 0.6)', fontStyle: 'italic', padding: '16px 0' }}>
-          Aucun cours ne correspond aux critères.
-        </p>
+        <div style={{ textAlign: 'center', padding: '36px 0', color: 'rgba(148, 163, 184, 0.7)' }}>
+          Aucun cours ne correspond aux filtres sélectionnés.
+        </div>
       )}
 
       {filteredCourses.length > 0 && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '24px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '28px' }}>
           {filteredCourses.map((course) => (
             <div key={course._id} className="item-card">
-              <div>
-                <strong>{course.title}</strong>
-                <div style={{ fontSize: '13px', color: 'rgba(255, 255, 255, 0.6)', marginTop: '4px' }}>
-                  Catégorie: {course.category} | Niveau: {course.level}
+              <div style={{ flex: 1 }}>
+                <strong style={{ fontSize: '15px', color: '#F8FAFC' }}>{course.title}</strong>
+                <div style={{ fontSize: '13px', color: 'rgba(148, 163, 184, 0.85)', marginTop: '4px' }}>
+                  Catégorie: <span style={{ color: '#C7D2FE' }}>{course.category}</span> &bull; Niveau: <span style={{ color: '#C7D2FE' }}>{course.level}</span>
+                  {course.estimatedDuration && <span> &bull; Durée: {course.estimatedDuration}h</span>}
                 </div>
               </div>
 
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span className="badge">{course.status}</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+                <span className={getStatusBadgeClass(course.status)}>{course.status}</span>
                 <button type="button" onClick={() => handleEditClick(course)}>
                   Modifier
                 </button>
                 {confirmArchiveId === course._id ? (
-                  <span style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
-                    <button type="button" onClick={() => handleArchiveCourse(course._id)} style={{ borderColor: '#F87171', color: '#F87171' }}>
+                  <span style={{ display: 'inline-flex', gap: '6px', alignItems: 'center' }}>
+                    <button type="button" onClick={() => handleArchiveCourse(course._id)} style={{ borderColor: '#EF4444', color: '#FCA5A5', background: 'rgba(239, 68, 68, 0.2)' }}>
                       Confirmer
                     </button>
                     <button type="button" onClick={() => setConfirmArchiveId(null)}>
@@ -268,7 +301,7 @@ function CourseList({ token, onLogout }) {
                     </button>
                   </span>
                 ) : (
-                  <button type="button" onClick={() => setConfirmArchiveId(course._id)}>
+                  <button type="button" onClick={() => setConfirmArchiveId(course._id)} style={{ color: 'rgba(248, 113, 113, 0.9)' }}>
                     Archiver
                   </button>
                 )}
@@ -280,47 +313,47 @@ function CourseList({ token, onLogout }) {
 
       <hr />
 
-      <h3 style={{ marginBottom: '16px', color: '#38BDF8' }}>
-        {editingCourseId ? 'Modifier le cours' : 'Ajouter un nouveau cours'}
+      <h3 style={{ marginBottom: '18px', fontSize: '17px', color: '#A5B4FC', fontWeight: '600' }}>
+        {editingCourseId ? 'Modifier le cours sélectionné' : 'Ajouter un nouveau cours'}
       </h3>
 
-      <form onSubmit={handleSubmitCourse} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+      <form onSubmit={handleSubmitCourse} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
         <div>
-          <label htmlFor="courseTitle" style={{ display: 'block', marginBottom: '6px', fontSize: '13px' }}>Titre</label>
+          <label htmlFor="courseTitle" style={{ display: 'block', marginBottom: '6px', fontSize: '13px', fontWeight: '500', color: '#CBD5E1' }}>Titre du cours</label>
           <input
             id="courseTitle"
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder="Titre du cours"
+            placeholder="ex: React Fondamentaux"
           />
         </div>
 
         <div>
-          <label htmlFor="courseDescription" style={{ display: 'block', marginBottom: '6px', fontSize: '13px' }}>Description</label>
+          <label htmlFor="courseDescription" style={{ display: 'block', marginBottom: '6px', fontSize: '13px', fontWeight: '500', color: '#CBD5E1' }}>Description</label>
           <textarea
             id="courseDescription"
             rows="3"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            placeholder="Description concise du cours"
+            placeholder="Description concise du contenu et des objectifs"
           />
         </div>
 
-        <div style={{ display: 'flex', gap: '16px' }}>
-          <div style={{ flex: 1 }}>
-            <label htmlFor="courseCategory" style={{ display: 'block', marginBottom: '6px', fontSize: '13px' }}>Catégorie</label>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '14px' }}>
+          <div>
+            <label htmlFor="courseCategory" style={{ display: 'block', marginBottom: '6px', fontSize: '13px', fontWeight: '500', color: '#CBD5E1' }}>Catégorie</label>
             <input
               id="courseCategory"
               type="text"
               value={category}
               onChange={(e) => setCategory(e.target.value)}
-              placeholder="Ex: Database, Web"
+              placeholder="ex: Web, Backend, Database"
             />
           </div>
 
-          <div style={{ flex: 1 }}>
-            <label htmlFor="courseLevel" style={{ display: 'block', marginBottom: '6px', fontSize: '13px' }}>Niveau</label>
+          <div>
+            <label htmlFor="courseLevel" style={{ display: 'block', marginBottom: '6px', fontSize: '13px', fontWeight: '500', color: '#CBD5E1' }}>Niveau</label>
             <select
               id="courseLevel"
               value={level}
@@ -332,8 +365,8 @@ function CourseList({ token, onLogout }) {
             </select>
           </div>
 
-          <div style={{ width: '140px' }}>
-            <label htmlFor="courseDuration" style={{ display: 'block', marginBottom: '6px', fontSize: '13px' }}>Durée (heures)</label>
+          <div>
+            <label htmlFor="courseDuration" style={{ display: 'block', marginBottom: '6px', fontSize: '13px', fontWeight: '500', color: '#CBD5E1' }}>Durée estimée (heures)</label>
             <input
               id="courseDuration"
               type="number"
@@ -344,10 +377,14 @@ function CourseList({ token, onLogout }) {
           </div>
         </div>
 
-        {formError && <p style={{ color: '#F87171', fontSize: '13px' }}>{formError}</p>}
+        {formError && (
+          <div style={{ background: 'rgba(239, 68, 68, 0.12)', border: '1px solid rgba(239, 68, 68, 0.3)', borderRadius: '8px', padding: '10px 14px', color: '#FCA5A5', fontSize: '13px' }}>
+            {formError}
+          </div>
+        )}
 
-        <div style={{ display: 'flex', gap: '10px', marginTop: '6px' }}>
-          <button type="submit" disabled={formLoading}>
+        <div style={{ display: 'flex', gap: '12px', marginTop: '4px' }}>
+          <button type="submit" disabled={formLoading} style={{ background: 'linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%)', borderColor: '#818CF8' }}>
             {formLoading ? 'Enregistrement...' : editingCourseId ? 'Mettre à jour' : 'Créer le cours'}
           </button>
 
